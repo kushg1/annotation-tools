@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Entering annotation-tools/.travis-build.sh"
+
 # Optional argument $1 is one of:
 #   all, test, misc
 # If it is omitted, this script does everything.
@@ -8,7 +10,7 @@ if [[ "${GROUP}" == "" ]]; then
   export GROUP=all
 fi
 
-if [[ "${GROUP}" != "all" && "${GROUP}" != "test" && "${GROUP}" != "misc" ]]; then
+if [[ "${GROUP}" != "all" && "${GROUP}" != "test" && "${GROUP}" != "misc" && "${GROUP}" != "downstream" ]]; then
   echo "Bad argument '${GROUP}'; should be omitted or one of: all, test, misc."
   exit 1
 fi
@@ -53,4 +55,17 @@ if [[ "${GROUP}" == "misc" || "${GROUP}" == "all" ]]; then
   ant html-validate
 
   ant javadoc
+fi
+
+if [[ "${GROUP}" == "downstream" || "${GROUP}" == "all" ]]; then
+    # checker-framework and its downstream tests
+    (cd .. && git clone --depth 1 https://github.com/plume-lib/plume-scripts.git)
+    REPO=`../plume-scripts/git-find-fork ${SLUGOWNER} typetools checker-framework-inference`
+    BRANCH=`../plume-scripts/git-find-branch $REPO ${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}`
+    (cd .. && git clone -b $BRANCH --single-branch --depth 1 $REPO) || (cd .. && git clone -b $BRANCH --single-branch --depth 1 $REPO)
+
+    (cd ../checker-framework-inference && . ./.travis-build-without-test.sh)
+
+    (cd ../checker-framework/framework && ../gradlew wholeProgramInferenceTests)
+    (cd ../checker-framework-inference && ./gradlew dist && ./gradlew test)
 fi

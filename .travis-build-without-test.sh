@@ -1,9 +1,20 @@
 #!/bin/bash
 
+echo "Entering annotation-tools/.travis-build-without-test.sh"
+
 # Fail the whole script if any command fails
 set -e
 
 export SHELLOPTS
+
+export JAVA_HOME=${JAVA_HOME:-$(dirname $(dirname $(dirname $(readlink -f $(/usr/bin/which java)))))}
+
+export JSR308=${JSR308:-..}
+export AFU=${AFU:-../annotation-tools/annotation-file-utilities}
+export CHECKERFRAMEWORK=${CHECKERFRAMEWORK:-../checker-framework}
+
+export PATH=$AFU/scripts:$JAVA_HOME/bin:$PATH
+
 
 SLUGOWNER=${TRAVIS_REPO_SLUG%/*}
 if [[ "$SLUGOWNER" == "" ]]; then
