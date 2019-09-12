@@ -7,9 +7,14 @@ set -e
 
 export SHELLOPTS
 
-export JAVA_HOME=${JAVA_HOME:-$(dirname $(dirname $(dirname $(readlink -f $(/usr/bin/which java)))))}
+if [ "$(uname)" = "Darwin" ] ; then
+  export JAVA_HOME=${JAVA_HOME:-$(/usr/libexec/java_home)}
+else
+  export JAVA_HOME=${JAVA_HOME:-$(dirname $(dirname $(readlink -f $(which javac))))}
+fi
 echo JAVA_HOME=$JAVA_HOME
 export AFU="${AFU:-$(cd annotation-file-utilities && pwd -P)}"
+
 export PATH=$AFU/scripts:$JAVA_HOME/bin:$PATH
 
 ## Compile
